@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aether • AI Analytics</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
+:root { --accent: #00f0ff; }
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: radial-gradient(circle at 50% 20%, #0a0f2c 0%, #05081a 80%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    overflow: hidden;
+}
+
+.dashboard {
+    width: 100%;
+    max-width: 1280px;
+    height: 720px;
+    background: rgba(10, 15, 44, 0.95);
+    border-radius: 28px;
+    box-shadow: 0 40px 90px -20px rgba(0, 240, 255, 0.3),0 0 0 1px rgba(255,255,255,0.1) inset;
+    overflow: hidden;
+    display: flex;
+    backdrop-filter: blur(20px);
+}
+
+/* サイドバー */
+.sidebar {
+    width: 240px;
+    background: rgba(8, 12, 32, 0.98);
+    padding: 24px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    border-right: 1px solid rgba(255,255,255,0.08);
+    transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+    transform: translateX(0);
+}
+.sidebar.closed { transform: translateX(-100%); }
+
+.logo { display:flex;align-items:center;gap:12px;padding:0 12px 28px;font-size:23px;font-weight:700;color:#fff;letter-spacing:-0.8px; }
+.logo-icon { width:36px;height:36px;background:linear-gradient(135deg,#00f0ff,#0099ff);border-radius:10px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 20px rgba(0,240,255,0.6); }
+
+.nav-item { display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:14px;color:#94a3c0;font-size:15px;font-weight:500;transition: all 0.2s; cursor:pointer; }
+.nav-item:hover { background: rgba(0,240,255,0.15); color:white; }
+.nav-item.active { background: rgba(0,240,255,0.25); color:white; box-shadow:0 4px 15px rgba(0,240,255,0.2); }
+.nav-icon { width:24px;height:24px; }
+
+.users-section { margin-top:auto; padding-top:32px; border-top:1px solid rgba(255,255,255,0.08); }
+.user-item { display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:12px; }
+.avatar { width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:13px;font-weight:600; }
+
+/* 閉じるボタン */
+.close-btn { position:absolute;top:24px;right:20px;width:32px;height:32px;background:none;border:none;font-size:28px;color:#94a3c0;cursor:pointer;display:none;z-index:10; }
+.sidebar:not(.closed) .close-btn { display:block; }
+
+/* メイン */
+.main { flex:1;display:flex;flex-direction:column; }
+.top-bar { height:76px;background:rgba(10,15,44,0.9);border-bottom:1px solid rgba(255,255,255,0.08);padding:0 24px;display:flex;align-items:center;gap:20px; }
+.hamburger { width:36px;height:36px;background:none;border:none;font-size:28px;color:#94a3c0;cursor:pointer;display:flex;align-items:center;justify-content:center; }
+.search { flex:1;max-width:440px;background:rgba(255,255,255,0.08);border-radius:9999px;padding:12px 24px;display:flex;align-items:center;gap:12px;color:#94a3c0;font-size:15.5px; }
+.top-right { display:flex;align-items:center;gap:24px; }
+.avatar-top { width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#00f0ff,#0099ff);display:flex;align-items:center;justify-content:center;color:#05081a;font-weight:700;font-size:15px; }
+
+/* コンテンツ */
+.content { flex:1;padding:32px;overflow-y:auto; }
+.header-title { font-size:26px;font-weight:700;color:white;margin-bottom:4px; }
+.stats-grid { display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;margin-bottom:36px; }
+.stat-card { background: rgba(255,255,255,0.07); border-radius:20px;padding:24px;border:1px solid rgba(255,255,255,0.1); }
+.stat-label { font-size:14px;color:#94a3c0; }
+.stat-value { font-size:32px;font-weight:700;color:white;margin-top:8px; }
+
+.charts { display:grid;grid-template-columns:1fr 1fr;gap:28px; }
+.chart-card { background: rgba(255,255,255,0.07); border-radius:20px;padding:28px;border:1px solid rgba(255,255,255,0.1); }
+.chart-title { font-size:16px;font-weight:600;color:white;margin-bottom:24px;display:flex;justify-content:space-between;align-items:center; }
+.donut-container { position:relative;width:220px;height:220px;margin:0 auto; }
+.bar-svg { width:100%;height:270px; }
+.legend { display:flex;flex-wrap:wrap;gap:18px;margin-top:20px;font-size:14px; }
+.legend-item { display:flex;align-items:center;gap:8px; }
+.legend-dot { width:12px;height:12px;border-radius:50%; }
+
+</style>
+</head>
+<body>
+
+<div class="dashboard">
+
+    <!-- サイドバー -->
+    <div class="sidebar" id="sidebar">
+        <button onclick="closeSidebar()" class="close-btn">×</button>
+
+        <div class="logo">
+            <div class="logo-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2v20M2 12h20"/></svg>
+            </div>
+            Aether
+        </div>
+
+        <div class="nav-item active"><svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#00f0ff"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-9 9-4-4-6 6" /></svg> Analytics</div>
+        <div class="nav-item"><svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#94a3c0"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 01-5.356-1.857M17 20H7m5-2v-2c0-.656-.126-1.284-.356-1.852M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.284.356-1.852m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg> Agents</div>
+        <div class="nav-item"><svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#94a3c0"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2 2 2 0 01-2-2 2 2 0 01-2-2 2 2 0 012-2zm10 0v6a2 2 0 01-2 2h-2a2 2 0 01-2-2v-6" /></svg> Tasks</div>
+        <div class="nav-item"><svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#94a3c0"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 01-9 9 9 9 0 01-9-9 9 9 0 019-9 9 9 0 019 9z" /></svg> History</div>
+
+        <div class="users-section">
+            <div class="nav-item"><svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#00f0ff"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 01-5.356-1.857M17 20H7m5-2v-2c0-.656-.126-1.284-.356-1.852M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.284.356-1.852m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg> Team</div>
+            
+            <div class="user-item">
+                <div class="avatar" style="background:#00f0ff">YK</div>
+                <div style="font-weight:600;color:white;font-size:14px">山田 圭吾</div>
+            </div>
+            <div class="user-item">
+                <div class="avatar" style="background:#0099ff">AI</div>
+                <div style="font-weight:600;color:white;font-size:14px">AI Agent Alpha</div>
+            </div>
+            <div class="user-item">
+                <div class="avatar" style="background:#00ccff">β</div>
+                <div style="font-weight:600;color:white;font-size:14px">Beta Assistant</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- メインエリア -->
+    <div class="main">
+
+        <div class="top-bar">
+            <button onclick="toggleSidebar()" class="hamburger">☰</button>
+            <div class="search">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="#94a3c0" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                検索...
+            </div>
+            <div class="top-right">
+                <div class="avatar-top">G</div>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="header-title">Aether Analytics</div>
+            <p style="color:#94a3c0;margin-bottom:32px">リアルタイムAI運用状況</p>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">アクティブAI社員</div>
+                    <div class="stat-value">47</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">本日完了タスク</div>
+                    <div class="stat-value">1,284</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">平均パフォーマンス</div>
+                    <div class="stat-value">96.4%</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">進行中進化</div>
+                    <div class="stat-value">12</div>
+                </div>
+            </div>
+
+            <div class="charts">
+
+                <!-- ドーナツチャート -->
+                <div class="chart-card">
+                    <div class="chart-title">
+                        今日のAI稼働率
+                        <select style="background:none;border:none;color:#94a3c0;font-size:14px"><option>本日 ▼</option></select>
+                    </div>
+                    <div class="donut-container">
+                        <svg width="220" height="220" viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="110" cy="110" r="80" fill="none" stroke="#13213f" stroke-width="36"/>
+                            <circle cx="110" cy="110" r="80" fill="none" stroke="#00f0ff" stroke-width="36" stroke-dasharray="502 502" stroke-dashoffset="0" transform="rotate(-90 110 110)"/>
+                            <circle cx="110" cy="110" r="80" fill="none" stroke="#0099ff" stroke-width="36" stroke-dasharray="75 502" stroke-dashoffset="-427" transform="rotate(-90 110 110)"/>
+                            <text x="110" y="115" text-anchor="middle" fill="#fff" font-size="32" font-weight="700">94%</text>
+                        </svg>
+                    </div>
+                    <div class="legend">
+                        <div class="legend-item"><span class="legend-dot" style="background:#00f0ff"></span> 正常稼働 <span style="margin-left:auto">44</span></div>
+                        <div class="legend-item"><span class="legend-dot" style="background:#0099ff"></span> 進化中 <span style="margin-left:auto">3</span></div>
+                    </div>
+                </div>
+
+                <!-- バーチャート -->
+                <div class="chart-card">
+                    <div class="chart-title">
+                        タスク完了状況
+                        <select style="background:none;border:none;color:#94a3c0;font-size:14px"><option>本日 ▼</option></select>
+                    </div>
+                    <svg class="bar-svg" viewBox="0 0 400 270">
+                        <g>
+                            <rect x="30" y="50" width="40" height="180" fill="#00f0ff"/>
+                            <rect x="90" y="90" width="40" height="140" fill="#0099ff"/>
+                            <rect x="150" y="30" width="40" height="200" fill="#00ccff"/>
+                            <rect x="210" y="70" width="40" height="160" fill="#00f0ff"/>
+                            <rect x="270" y="110" width="40" height="120" fill="#0099ff"/>
+                        </g>
+                        <g>
+                            <text x="30" y="250" fill="#94a3c0" font-size="12">月</text>
+                            <text x="90" y="250" fill="#94a3c0" font-size="12">火</text>
+                            <text x="150" y="250" fill="#94a3c0" font-size="12">水</text>
+                            <text x="210" y="250" fill="#94a3c0" font-size="12">木</text>
+                            <text x="270" y="250" fill="#94a3c0" font-size="12">金</text>
+                        </g>
+                    </svg>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+const sidebar = document.getElementById('sidebar');
+function toggleSidebar(){ sidebar.classList.toggle('closed'); }
+function closeSidebar(){ sidebar.classList.add('closed'); }
+
+// ドーナツチャート動的更新
+function updateDonut(){
+    const normal = Math.floor(Math.random()*50)+30;
+    const evolve = 50
+function updateDonut(){
+    const normal = Math.floor(Math.random()*50)+30; // 正常稼働の数
+    const evolve = 50 - normal; // 残りが進化中と仮定
+
+    const total = 50; // 合計値（例: 50AI）
+    const normalCircle = document.querySelector('.donut-container circle:nth-child(2)');
+    const evolveCircle = document.querySelector('.donut-container circle:nth-child(3)');
+    const label = document.querySelector('.donut-container text');
+
+    const dashArray = 2 * Math.PI * 80; // r=80 の円周
+    const normalOffset = dashArray * (1 - normal / total);
+    const evolveOffset = dashArray * (1 - (normal + evolve) / total);
+
+    normalCircle.setAttribute('stroke-dasharray', `${dashArray} ${dashArray}`);
+    normalCircle.setAttribute('stroke-dashoffset', normalOffset);
+
+    evolveCircle.setAttribute('stroke-dasharray', `${dashArray} ${dashArray}`);
+    evolveCircle.setAttribute('stroke-dashoffset', normalOffset + evolveOffset);
+
+    label.textContent = `${Math.round((normal/total)*100)}%`;
+}
+
+// 初回呼び出しと5秒ごとの更新
+updateDonut();
+setInterval(updateDonut, 5000);
