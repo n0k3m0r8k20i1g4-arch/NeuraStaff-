@@ -1,0 +1,20 @@
+{
+  "donut": {
+    "totalAI": 50,
+    "normal": 44,
+    "evolve": 6
+  },
+  "stats": {
+    "activeAI": 47,
+    "completedTasks": 1284,
+    "averagePerformance": 96.4,
+    "ongoingEvolution": 12
+  },
+  "barChart": {
+    "月": 180,
+    "火": 140,
+    "水": 200,
+    "木": 160,
+    "金": 120
+  }
+}
